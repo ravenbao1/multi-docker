@@ -1,0 +1,50 @@
+version: "3"
+services:
+  postgres:
+    image: "postgres:latest"
+    environment:
+      - POSTGRES_PASSWORD=postgres_password
+  redis:
+    image: "redis:latest"
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "3050:80"
+  api: # referencing the server name in nginx .conf file
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./server # Look for the dockerfile.dev within the server folder
+    volumes:
+      - /app/node_modules
+      - ./server:/app
+    environment: # Referenced in server\keys.js
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379 # found in hub.docker.com under redis
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABSE=postgres
+      - PGPASSWORD=postgres_password
+      - PGPORT=5432 # found in hub.docker.com under postgres
+  client:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client # Look for the dockerfile.dev within the client folder
+    volumes:
+      - /app/node_modules
+      - ./client:/app
+  worker:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker # Look for the dockerfile.dev within the worker folder
+    volumes:
+      - /app/node_modules
+      - ./worker:/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
