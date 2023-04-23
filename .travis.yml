@@ -10,6 +10,18 @@ before_install:
 script:
   - docker run -e CI=true ravenbao/react-test npm test
 
+deploy:
+  provider: elasticbeanstalk
+  region: "us-east-2" # Obtained from the URL of the webapp in AWS
+  name: "multi-docker" # Obtained from the webapp in AWS
+  env: "MultiDocker-env" # Obtained from the webapp in AWS
+  bucket_name: "elasticbeanstalk-us-east-2-879363212469" # Found in AWS > s3 > search for the corresponding bucket to the webapp 
+  bucket_path: "docker-multi" # Same as the name
+  on:
+    branch: master # Only deploy when master branch has some new code
+  access_key_id: "$AWS_ACCESS_KEY"
+  secret_access_key: "$AWS_SECRET_KEY" # Defined in the travis CI repo settings, key and secret were created from AWS
+
 after_success:
   - docker build -t ravenbao/multi-client ./client
   - docker build -t ravenbao/multi-nginx ./nginx
